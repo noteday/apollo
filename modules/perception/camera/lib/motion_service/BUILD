@@ -20,6 +20,7 @@ cc_library(
         "//modules/perception/lib/registerer",
         "//modules/perception/onboard/proto:motion_service_cc_proto",
         "//modules/perception/proto:motion_service_cc_proto",
+        "//um_dev/profiling/timing:timing",
     ],
 )
 

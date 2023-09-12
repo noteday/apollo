@@ -58,6 +58,9 @@ class FusionComponent : public cyber::Component<SensorFrameMessage> {
   map::HDMapInput* hdmap_input_ = nullptr;
   std::shared_ptr<apollo::cyber::Writer<PerceptionObstacles>> writer_;
   std::shared_ptr<apollo::cyber::Writer<SensorFrameMessage>> inner_writer_;
+
+  // Yuting@2022.6.29: Count objects
+  unsigned int num_objects_ = 0;
 };
 
 CYBER_REGISTER_COMPONENT(FusionComponent);

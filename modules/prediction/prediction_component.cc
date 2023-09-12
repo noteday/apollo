@@ -33,6 +33,7 @@
 #include "modules/prediction/proto/prediction_conf.pb.h"
 #include "modules/prediction/scenario/scenario_manager.h"
 #include "modules/prediction/util/data_extraction.h"
+#include "um_dev/profiling/timing/timing.h"
 
 namespace apollo {
 namespace prediction {
@@ -113,6 +114,22 @@ bool PredictionComponent::Init() {
 
 bool PredictionComponent::Proc(
     const std::shared_ptr<PerceptionObstacles>& perception_obstacles) {
+  // Yuting@2022.6.24: now keep latest timestamps for sensors
+  latest_camera_ts_ = perception_obstacles->header().has_camera_timestamp() && perception_obstacles->header().camera_timestamp() > latest_camera_ts_
+  ? perception_obstacles->header().camera_timestamp() 
+  : latest_camera_ts_;
+  latest_lidar_ts_ = perception_obstacles->header().has_lidar_timestamp() && perception_obstacles->header().lidar_timestamp() > latest_lidar_ts_
+  ? perception_obstacles->header().lidar_timestamp() 
+  : latest_lidar_ts_;
+  latest_radar_ts_ = perception_obstacles->header().has_radar_timestamp() && perception_obstacles->header().radar_timestamp() > latest_radar_ts_
+  ? perception_obstacles->header().radar_timestamp() 
+  : latest_radar_ts_;
+  latest_TL_ts_ = perception_obstacles->header().has_tl_timestamp() && perception_obstacles->header().tl_timestamp() > latest_TL_ts_
+  ? perception_obstacles->header().tl_timestamp() 
+  : latest_TL_ts_;
+  latest_lane_ts_ = perception_obstacles->header().has_lane_timestamp() && perception_obstacles->header().lane_timestamp() > latest_lane_ts_
+  ? perception_obstacles->header().lane_timestamp() 
+  : latest_lane_ts_;
   if (FLAGS_use_lego) {
     return ContainerSubmoduleProcess(perception_obstacles);
   }
@@ -121,6 +138,7 @@ bool PredictionComponent::Proc(
 
 bool PredictionComponent::ContainerSubmoduleProcess(
     const std::shared_ptr<PerceptionObstacles>& perception_obstacles) {
+  um_dev::profiling::UM_Timing timing("PredictionComponent::ContainerSubmoduleProcess");
   constexpr static size_t kHistorySize = 10;
   const auto frame_start_time = Clock::Now();
   // Read localization info. and call OnLocalization to update
@@ -168,14 +186,16 @@ bool PredictionComponent::ContainerSubmoduleProcess(
       obstacles_container_ptr->GetSubmoduleOutput(kHistorySize,
                                                   frame_start_time);
   submodule_output.set_curr_scenario(scenario_manager_->scenario());
+  timing.set_finish(latest_camera_ts_, latest_lidar_ts_, latest_radar_ts_, latest_TL_ts_, latest_lane_ts_);
   container_writer_->Write(submodule_output);
   adc_container_writer_->Write(*adc_trajectory_container_ptr);
-  perception_obstacles_writer_->Write(*perception_obstacles);
+  perception_obstacles_writer_->Write(*perception_obstacles); // Yuting@2022.6.16: Why output it again? See predicator_module.cc
   return true;
 }
 
 bool PredictionComponent::PredictionEndToEndProc(
     const std::shared_ptr<PerceptionObstacles>& perception_obstacles) {
+  um_dev::profiling::UM_Timing timing("PredictionComponent::PredictionEndToEndProc");
   if (FLAGS_prediction_test_mode &&
       (Clock::NowInSeconds() - component_start_time_ >
        FLAGS_prediction_test_duration)) {
@@ -272,6 +292,14 @@ bool PredictionComponent::PredictionEndToEndProc(
 
   // Publish output
   common::util::FillHeader(node_->Name(), &prediction_obstacles);
+  prediction_obstacles.mutable_header()->set_camera_timestamp(latest_camera_ts_);
+  prediction_obstacles.mutable_header()->set_lidar_timestamp(latest_lidar_ts_);
+  prediction_obstacles.mutable_header()->set_radar_timestamp(latest_radar_ts_);
+  prediction_obstacles.mutable_header()->set_tl_timestamp(latest_TL_ts_);
+  prediction_obstacles.mutable_header()->set_lane_timestamp(latest_lane_ts_);
+ 
+  timing.set_info(perception_obstacles->perception_obstacle_size());
+  timing.set_finish(latest_camera_ts_, latest_lidar_ts_, latest_radar_ts_, 0, 0);
   prediction_writer_->Write(prediction_obstacles);
   return true;
 }

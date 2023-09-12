@@ -30,6 +30,7 @@
 #include "modules/perception/common/sensor_manager/sensor_manager.h"
 #include "modules/perception/onboard/common_flags/common_flags.h"
 #include "modules/perception/onboard/component/camera_perception_viz_message.h"
+#include "um_dev/profiling/timing/timing.h"
 
 namespace apollo {
 namespace perception {
@@ -269,6 +270,11 @@ bool CameraObstacleDetectionComponent::Init() {
 void CameraObstacleDetectionComponent::OnReceiveImage(
     const std::shared_ptr<apollo::drivers::Image> &message,
     const std::string &camera_name) {
+  // Yuting@2022.6.23: now sets ts when sensor goes into system
+  auto enter_ts = cyber::Time::Now();
+  // Yuting@2022.6.24: now keep latest timestamps for sensors
+  latest_camera_ts_ = enter_ts.ToNanosecond();
+  um_dev::profiling::UM_Timing timing("CameraObstacleDetectionComponent::OnReceiveImage");
   std::lock_guard<std::mutex> lock(mutex_);
   const double msg_timestamp = message->measurement_time() + timestamp_offset_;
   AINFO << "Enter CameraObstacleDetectionComponent::Proc(), "
@@ -311,16 +317,23 @@ void CameraObstacleDetectionComponent::OnReceiveImage(
       return;
     }
     if (output_final_obstacles_) {
+      // out_message->mutable_header()->set_camera_timestamp(enter_ts.ToNanosecond());
+      // timing.set_finish(enter_ts.ToNanosecond(), 0, 0);      
       writer_->Write(out_message);
     }
     return;
   }
 
+  // Yuting@2022.6.16: set camera timestamp for prefused
+  prefused_message->camera_timestamp_ = latest_camera_ts_;
+  timing.set_finish(latest_camera_ts_, 0, 0, 0, 0);
   bool send_sensorframe_ret = sensorframe_writer_->Write(prefused_message);
   AINFO << "send out prefused msg, ts: " << msg_timestamp
         << "ret: " << send_sensorframe_ret;
   // Send output msg
   if (output_final_obstacles_) {
+    // out_message->mutable_header()->set_camera_timestamp(enter_ts.ToNanosecond());
+    // timing.set_finish(enter_ts.ToNanosecond(), 0, 0);
     writer_->Write(out_message);
   }
   // for e2e lantency statistics
@@ -766,7 +779,7 @@ int CameraObstacleDetectionComponent::InternalProc(
         prefused_message->frame_->camera_frame_supplement.image_blob.get());
   }
 
-  //  Determine CIPV
+  //  Determine CIPV (Closest In-Path Vehicle)
   if (enable_cipv_) {
     camera::CipvOptions cipv_options;
     if (motion_buffer_ != nullptr) {

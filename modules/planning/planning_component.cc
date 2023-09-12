@@ -26,6 +26,7 @@
 #include "modules/planning/common/planning_context.h"
 #include "modules/planning/navi_planning.h"
 #include "modules/planning/on_lane_planning.h"
+#include "um_dev/profiling/timing/timing.h"
 
 namespace apollo {
 namespace planning {
@@ -73,6 +74,8 @@ bool PlanningComponent::Init() {
   traffic_light_reader_ = node_->CreateReader<TrafficLightDetection>(
       config_.topic_config().traffic_light_detection_topic(),
       [this](const std::shared_ptr<TrafficLightDetection>& traffic_light) {
+        // Yuting@2022.6.24: now keep latest timestamps for sensors
+        this->latest_TL_ts_ = traffic_light->header().camera_timestamp();
         ADEBUG << "Received traffic light data: run traffic light callback.";
         std::lock_guard<std::mutex> lock(mutex_);
         traffic_light_.CopyFrom(*traffic_light);
@@ -93,6 +96,12 @@ bool PlanningComponent::Init() {
         std::lock_guard<std::mutex> lock(mutex_);
         stories_.CopyFrom(*stories);
       });
+
+  // lane_reader_ = node_->CreateReader<apollo::perception::PerceptionLanes>(
+  //     "apollo/perception/lanes",
+  //     [this](const std::shared_ptr<apollo::perception::PerceptionLanes>& lane_msg) {
+  //       ADEBUG << "Received lane data: run lane_msg callback.";
+  //     });
 
   if (FLAGS_use_navigation_mode) {
     relative_map_reader_ = node_->CreateReader<MapMsg>(
@@ -121,6 +130,26 @@ bool PlanningComponent::Proc(
     const std::shared_ptr<canbus::Chassis>& chassis,
     const std::shared_ptr<localization::LocalizationEstimate>&
         localization_estimate) {
+  // Yuting@2022.6.24: now keep latest timestamps for sensors
+  // Yuting@2022.6.30: now keep latest timestamps for information sources
+  latest_camera_ts_ =
+      prediction_obstacles->header().has_camera_timestamp() &&
+              prediction_obstacles->header().camera_timestamp() >
+                  latest_camera_ts_
+          ? prediction_obstacles->header().camera_timestamp()
+          : latest_camera_ts_;
+  latest_lidar_ts_ = prediction_obstacles->header().has_lidar_timestamp() &&
+                             prediction_obstacles->header().lidar_timestamp() >
+                                 latest_lidar_ts_
+                         ? prediction_obstacles->header().lidar_timestamp()
+                         : latest_lidar_ts_;
+  latest_radar_ts_ = prediction_obstacles->header().has_radar_timestamp() &&
+                             prediction_obstacles->header().radar_timestamp() >
+                                 latest_radar_ts_
+                         ? prediction_obstacles->header().radar_timestamp()
+                         : latest_radar_ts_;
+  um_dev::profiling::UM_Timing timing("PlanningComponent::Proc");
+ 
   ACHECK(prediction_obstacles != nullptr);
 
   // check and process possible rerouting request
@@ -187,14 +216,47 @@ bool PlanningComponent::Proc(
 
   ADCTrajectory adc_trajectory_pb;
   planning_base_->RunOnce(local_view_, &adc_trajectory_pb);
-  auto start_time = adc_trajectory_pb.header().timestamp_sec();
+  
   common::util::FillHeader(node_->Name(), &adc_trajectory_pb);
 
   // modify trajectory relative time due to the timestamp change in header
+  auto start_time = adc_trajectory_pb.header().timestamp_sec();
   const double dt = start_time - adc_trajectory_pb.header().timestamp_sec();
   for (auto& p : *adc_trajectory_pb.mutable_trajectory_point()) {
     p.set_relative_time(p.relative_time() + dt);
   }
+
+  // Yuting: Set ts for sensors and record E2E latency.
+  adc_trajectory_pb.mutable_header()->set_camera_timestamp(latest_camera_ts_);
+  adc_trajectory_pb.mutable_header()->set_lidar_timestamp(latest_lidar_ts_);
+  adc_trajectory_pb.mutable_header()->set_radar_timestamp(latest_radar_ts_);
+  adc_trajectory_pb.mutable_header()->set_tl_timestamp(latest_TL_ts_);
+  adc_trajectory_pb.mutable_header()->set_lane_timestamp(latest_lane_ts_);
+  // Yuting@2022.7.8： Compose story number
+  int stories_num = 0;
+  if (stories_.has_close_to_clear_area()) {
+    stories_num += 1e0;
+  }
+  if (stories_.has_close_to_crosswalk()) {
+    stories_num += 1e1;
+  }
+  if (stories_.has_close_to_junction()) {
+    stories_num += 1e2;
+  }
+  if (stories_.has_close_to_signal()) {
+    stories_num += 1e3;
+  }
+  if (stories_.has_close_to_stop_sign()) {
+    stories_num += 1e4;
+  }
+  if (stories_.has_close_to_yield_sign()) {
+    stories_num += 1e5;
+  }
+
+  timing.set_info(prediction_obstacles->prediction_obstacle_size(), stories_num,
+                  0);
+  timing.set_finish(latest_camera_ts_, latest_lidar_ts_, latest_radar_ts_,
+                    latest_TL_ts_, latest_lane_ts_);
   planning_writer_->Write(adc_trajectory_pb);
 
   // record in history

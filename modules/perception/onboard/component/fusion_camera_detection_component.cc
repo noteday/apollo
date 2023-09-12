@@ -30,6 +30,7 @@
 #include "modules/perception/common/sensor_manager/sensor_manager.h"
 #include "modules/perception/onboard/common_flags/common_flags.h"
 #include "modules/perception/onboard/component/camera_perception_viz_message.h"
+#include "um_dev/profiling/timing/timing.h"
 
 namespace apollo {
 namespace perception {
@@ -269,6 +270,11 @@ bool FusionCameraDetectionComponent::Init() {
 void FusionCameraDetectionComponent::OnReceiveImage(
     const std::shared_ptr<apollo::drivers::Image> &message,
     const std::string &camera_name) {
+  // Yuting@2022.6.23: now sets ts when sensor goes into system
+  auto enter_ts = cyber::Time::Now();
+  // Yuting@2022.6.24: now keep latest timestamps for sensors
+  latest_camera_ts_ = enter_ts.ToNanosecond();
+  um_dev::profiling::UM_Timing timing("FusionCameraDetectionComponent::OnReceiveImage");
   std::lock_guard<std::mutex> lock(mutex_);
   const double msg_timestamp = message->measurement_time() + timestamp_offset_;
   AINFO << "Enter FusionCameraDetectionComponent::Proc(), "
@@ -311,17 +317,22 @@ void FusionCameraDetectionComponent::OnReceiveImage(
       return;
     }
     if (output_final_obstacles_) {
+      timing.set_finish(latest_camera_ts_, 0, 0, 0, 0);
       writer_->Write(out_message);
     }
     return;
   }
 
+  prefused_message->camera_timestamp_ = latest_camera_ts_;
+  timing.set_info(prefused_message->frame_->objects.size());
+  timing.set_finish(latest_camera_ts_, 0, 0, 0, 0);
   bool send_sensorframe_ret = sensorframe_writer_->Write(prefused_message);
   AINFO << "send out prefused msg, ts: " << msg_timestamp
         << "ret: " << send_sensorframe_ret;
   // Send output msg
   if (output_final_obstacles_) {
     writer_->Write(out_message);
+    timing.set_finish(latest_camera_ts_, 0, 0, 0, 0);
   }
   // for e2e lantency statistics
   {

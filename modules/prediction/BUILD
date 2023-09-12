@@ -23,6 +23,7 @@ cc_library(
         "//modules/prediction/submodules:predictor_submodule_lib",
         "//modules/prediction/submodules:submodule_output",
         "//modules/prediction/util:data_extraction",
+        "//um_dev/profiling/timing:timing",
     ],
 )
 

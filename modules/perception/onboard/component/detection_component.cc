@@ -22,6 +22,7 @@
 #include "modules/perception/lidar/common/lidar_frame_pool.h"
 #include "modules/perception/lidar/common/lidar_log.h"
 #include "modules/perception/onboard/common_flags/common_flags.h"
+#include "um_dev/profiling/timing/timing.h"
 
 using ::apollo::cyber::Clock;
 
@@ -57,6 +58,14 @@ bool DetectionComponent::Init() {
 
 bool DetectionComponent::Proc(
     const std::shared_ptr<drivers::PointCloud>& message) {
+  // Yuting@2022.6.22: very heacky, set timestamp whenever sensor data go into system
+  auto enter_ts = cyber::Time::Now();
+  // Yuting@2022.6.24: now keep latest timestamps for sensors
+  latest_lidar_ts_ = enter_ts.ToNanosecond();
+  um_dev::profiling::UM_Timing timing("DetectionComponent::Proc");
+  timing.add_checkpoint("Beginning",
+                        cyber::Time(message->measurement_time()).ToNanosecond(),
+                        message->header().lidar_timestamp(), 0);
   AINFO << std::setprecision(16)
         << "Enter detection component, message timestamp: "
         << message->measurement_time()
@@ -66,6 +75,10 @@ bool DetectionComponent::Proc(
 
   bool status = InternalProc(message, out_message);
   if (status) {
+    out_message->timestamp_ = enter_ts.ToSecond();
+    out_message->lidar_timestamp_ = enter_ts.ToNanosecond();
+    timing.set_info(message->point_size(), message->is_dense());
+    timing.set_finish(0, latest_lidar_ts_, 0, 0, 0);
     writer_->Write(out_message);
     AINFO << "Send lidar detect output message.";
   }

@@ -31,6 +31,7 @@ cc_library(
         "//modules/localization/proto:localization_cc_proto",
         "//modules/localization/proto:rtk_config_cc_proto",
         "//modules/transform:transform_broadcaster",
+        "//um_dev/profiling/timing:timing",
         "@com_google_googletest//:gtest",
         "@eigen",
     ],

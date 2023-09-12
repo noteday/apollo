@@ -25,6 +25,7 @@
 #include "cyber/common/log.h"
 #include "modules/common/math/math_utils.h"
 #include "modules/perception/common/sensor_manager/sensor_manager.h"
+#include "um_dev/profiling/timing/timing.h"
 
 namespace apollo {
 namespace perception {
@@ -92,6 +93,7 @@ void MotionService::OnReceiveImage(const ImageMsgType &message,
 // On reveiving localization input, register it to camera timestamp,
 // compute motion between camera time stamps
 void MotionService::OnLocalization(const LocalizationMsgType &message) {
+  um_dev::profiling::UM_Timing timing("MotionService::OnLocalization");
   std::lock_guard<std::mutex> lock(mutex_);
   ADEBUG << "localization received: localization ts: "
          << message->measurement_time();

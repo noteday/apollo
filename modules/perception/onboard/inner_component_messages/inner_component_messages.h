@@ -59,6 +59,8 @@ class SensorFrameMessage {
   std::string sensor_id_;
   double timestamp_ = 0.0;
   uint64_t lidar_timestamp_ = 0;
+  uint64_t radar_timestamp_ = 0; // Yuting@2022.6.15: Dont lose radar and camera ts in SensorFrame
+  uint64_t camera_timestamp_ = 0;
   uint32_t seq_num_ = 0;
   std::string type_name_;
   base::HdmapStructConstPtr hdmap_;

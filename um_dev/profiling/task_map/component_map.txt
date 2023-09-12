@@ -1,0 +1,13 @@
+TrafficLightsPerceptionComponent {"/apollo/sensor/camera/front_6mm/image", "/apollo/sensor/camera/front_12mm/image", "/apollo/v2x/traffic_light"} {"/apollo/perception/traffic_light"}
+RTKLocalizationComponent {"/apollo/sensor/gnss/corrected_imu", "/apollo/sensor/gnss/odometry", "/apollo/sensor/gnss/ins_stat"} {"/apollo/localization/pose", "/apollo/localization/msf_status"}
+ControlComponent {"/apollo/canbus/chassis", "/apollo/planning", "/apollo/localization/pose"} {"/apollo/control"}
+FusionCameraDetectionComponent {"/apollo/sensor/camera/front_6mm/image", "/apollo/sensor/camera/front_12mm/image"} {"/apollo/perception/obstacles", "/perception/inner/PrefusedObjects"}
+PredictionComponent {"/apollo/storytelling", "/apollo/perception/obstacles", "/apollo/planning", "/apollo/localization/pose"} {"/apollo/prediction", "/apollo/prediction/perception_obstacles"}
+CameraObstacleDetectionComponent {"/apollo/sensor/camera/front_6mm/image", "/apollo/sensor/camera/front_12mm/image"} {"/apollo/perception/obstacles", "/perception/inner/PrefusedObjects"}
+LaneDetectionComponent {"/apollo/perception/lane_status", "/apollo/sensor/camera/front_6mm/image", "/apollo/sensor/camera/front_12mm/image"} {"/perception/lanes"}
+PlanningComponent {"/apollo/perception/traffic_light", "/apollo/routing_response", "/apollo/canbus/chassis", "/apollo/localization/pose", "/apollo/prediction"} {"/apollo/planning", "/apollo/routing_request"}
+RadarDetectionComponent {"/apollo/sensor/radar/front"} {"/perception/inner/PrefusedObjects"}
+FusionComponent {"/perception/inner/PrefusedObjects"} {"/perception/vehicle/obstacles"}
+DetectionComponent {"/apollo/sensor/lidar128/compensator/PointCloud2"} {"/perception/inner/DetectionObjects"}
+RecognitionComponent {"/perception/inner/DetectionObjects"} {"/perception/inner/PrefusedObjects"}
+V2XFusionComponent {"/perception/vehicle/obstacles"} {"/apollo/perception/obstacles"}

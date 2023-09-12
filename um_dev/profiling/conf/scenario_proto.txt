@@ -1,0 +1,26 @@
+# 1. Get all the messages that trigger each component.
+# 2. Get all scenario-related fields in these messages.
+
+Detection: message PointCloud
+Recognition: LidarFrameMessage
+FusionCamera: message Image
+Radar: 
+Fusion: SensorFrameMessage
+Prediction: message PerceptionObstacles   message Stories
+Planning: message TrafficLightDetection  message Stories  message PredictionObstacles  message Lane  message LocalizationEstimate
+Trafficlight: message Image
+Lane: message Lane
+Control: message Chassis  message ADCTrajectory
+Localization: message Gps
+
+message PointCloud: point size, is_dense
+class LidarFrameMessage: segmented_objects_ size
+SensorFrameMessage: objects size
+message Conti contiobs size
+message PerceptionObstacles: obstacle size
+message Stories: type of story
+message TrafficLightDetection: traffic light size
+message LocalizationEstimate: trajectory_point size
+message PerceptionLanes: CameraLane size
+message Chassis: speed_mps
+message ADCTrajectory: total_path_length total_path_time

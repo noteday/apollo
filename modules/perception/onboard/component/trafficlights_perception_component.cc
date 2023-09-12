@@ -37,6 +37,7 @@
 #include "modules/perception/camera/common/data_provider.h"
 #include "modules/perception/common/sensor_manager/sensor_manager.h"
 #include "modules/perception/onboard/common_flags/common_flags.h"
+#include "um_dev/profiling/timing/timing.h"
 
 namespace apollo {
 namespace perception {
@@ -312,6 +313,10 @@ int TrafficLightsPerceptionComponent::InitCameraFrame() {
 void TrafficLightsPerceptionComponent::OnReceiveImage(
     const std::shared_ptr<apollo::drivers::Image> msg,
     const std::string& camera_name) {
+  // Yuting@2022.6.23: now sets ts when sensor goes into system
+  auto enter_ts = cyber::Time::Now();
+  latest_lane_ts_ = enter_ts.ToNanosecond();
+  um_dev::profiling::UM_Timing timing("TrafficLightsPerceptionComponent::OnReceiveImage");
   std::lock_guard<std::mutex> lck(mutex_);
   double receive_img_timestamp = Clock::NowInSeconds();
   double image_msg_ts = msg->measurement_time();
@@ -414,6 +419,10 @@ void TrafficLightsPerceptionComponent::OnReceiveImage(
   }
 
   // send msg
+  out_msg->mutable_header()->set_camera_timestamp(enter_ts.ToNanosecond());
+  timing.set_info(out_msg->traffic_light_size());
+  timing.set_finish(0, 0, 0, latest_TL_ts_, 0);
+  out_msg->mutable_header()->set_tl_timestamp(latest_TL_ts_);
   writer_->Write(out_msg);
 
   //  SendSimulationMsg();

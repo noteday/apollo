@@ -24,6 +24,12 @@ message Header {
   // Radar Sensor timestamp for nano-second.
   optional uint64 radar_timestamp = 6;
 
+  // Trafficlight timestamp for nano-second.
+  optional uint64 TL_timestamp = 10;
+
+  // Lane timestamp for nano-second.
+  optional uint64 lane_timestamp = 11;
+
   // data version
   optional uint32 version = 7 [default = 1];
 

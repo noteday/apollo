@@ -23,6 +23,7 @@
 #include "modules/common/latency_recorder/latency_recorder.h"
 #include "modules/common/vehicle_state/vehicle_state_provider.h"
 #include "modules/control/common/control_gflags.h"
+#include "um_dev/profiling/timing/timing.h"
 
 namespace apollo {
 namespace control {
@@ -136,6 +137,27 @@ void ControlComponent::OnChassis(const std::shared_ptr<Chassis> &chassis) {
 
 void ControlComponent::OnPlanning(
     const std::shared_ptr<ADCTrajectory> &trajectory) {
+  // Yuting@2022.6.24: now keep latest timestamps for sensors
+  latest_camera_ts_ = 
+    trajectory->header().has_camera_timestamp() && trajectory->header().camera_timestamp() > latest_camera_ts_
+    ? trajectory->header().camera_timestamp()
+    : latest_camera_ts_;
+  latest_lidar_ts_ = 
+    trajectory->header().has_lidar_timestamp() && trajectory->header().lidar_timestamp() > latest_lidar_ts_
+    ? trajectory->header().lidar_timestamp()
+    : latest_lidar_ts_;
+  latest_radar_ts_ = 
+    trajectory->header().has_radar_timestamp() && trajectory->header().radar_timestamp() > latest_radar_ts_
+    ? trajectory->header().radar_timestamp()
+    : latest_radar_ts_;
+  latest_TL_ts_ = 
+    trajectory->header().has_tl_timestamp() && trajectory->header().tl_timestamp() > latest_TL_ts_
+    ? trajectory->header().tl_timestamp()
+    : latest_TL_ts_;
+  latest_lane_ts_ = 
+    trajectory->header().has_lane_timestamp() && trajectory->header().lane_timestamp() > latest_lane_ts_
+    ? trajectory->header().lane_timestamp()
+    : latest_lane_ts_;
   ADEBUG << "Received chassis data: run trajectory callback.";
   std::lock_guard<std::mutex> lock(mutex_);
   latest_trajectory_.CopyFrom(*trajectory);
@@ -277,6 +299,7 @@ Status ControlComponent::ProduceControlCommand(
 }
 
 bool ControlComponent::Proc() {
+  um_dev::profiling::UM_Timing timing("ControlComponent::Proc");
   const auto start_time = Clock::Now();
 
   chassis_reader_->Observe();
@@ -412,8 +435,11 @@ bool ControlComponent::Proc() {
         local_view_.trajectory().header().lidar_timestamp(), start_time,
         end_time);
   }
-
+  // Yuting: record E2E latency here, @2022.6.22: all writes to one line
+  timing.set_info(local_view_.chassis().speed_mps(), trajectory_msg->trajectory_point_size());
+  timing.set_finish(latest_camera_ts_, latest_lidar_ts_, latest_radar_ts_, latest_TL_ts_, latest_lane_ts_);
   control_cmd_writer_->Write(control_command);
+  
   return true;
 }
 

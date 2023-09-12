@@ -113,6 +113,13 @@ class ComponentBase : public std::enable_shared_from_this<ComponentBase> {
   std::shared_ptr<Node> node_ = nullptr;
   std::string config_file_path_ = "";
   std::vector<std::shared_ptr<ReaderBase>> readers_;
+
+  // Yuting@2022.6.23: add latest information timestamp in nano-second
+  unsigned long long latest_camera_ts_ = 0;
+  unsigned long long latest_lidar_ts_ = 0;
+  unsigned long long latest_radar_ts_ = 0;
+  unsigned long long latest_TL_ts_ = 0;
+  unsigned long long latest_lane_ts_ = 0;
 };
 
 }  // namespace cyber

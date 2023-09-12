@@ -38,6 +38,7 @@
 #include "modules/perception/common/sensor_manager/sensor_manager.h"
 #include "modules/perception/onboard/common_flags/common_flags.h"
 #include "modules/perception/onboard/component/camera_perception_viz_message.h"
+#include "um_dev/profiling/timing/timing.h"
 
 namespace apollo {
 namespace perception {
@@ -275,9 +276,14 @@ void LaneDetectionComponent::OnMotionService(
 void LaneDetectionComponent::OnReceiveImage(
     const std::shared_ptr<apollo::drivers::Image> &message,
     const std::string &camera_name) {
+  // Yuting@2022.6.23: now sets ts when sensor goes into system
+  auto enter_ts = cyber::Time::Now();
+  // Yuting@2022.6.24: now keep latest timestamps for sensors
+  latest_camera_ts_ = enter_ts.ToNanosecond();
+  um_dev::profiling::UM_Timing timing("LaneDetectionComponent::OnReceiveImage");
   std::lock_guard<std::mutex> lock(mutex_);
   const double msg_timestamp = message->measurement_time() + timestamp_offset_;
-  AINFO << "Enter LaneDetectionComponent::Proc(), camera_name: " << camera_name
+  AINFO << "Enter LaneDetectionComponent::OnReceiveImage(), camera_name: " << camera_name
         << " image ts: " << msg_timestamp;
   // timestamp should be almost monotonic
   if (last_timestamp_ - msg_timestamp > ts_diff_) {
@@ -312,6 +318,7 @@ void LaneDetectionComponent::OnReceiveImage(
     AERROR << "InternalProc failed, error_code: " << error_code;
     return;
   }
+  timing.set_finish(0, 0, 0, 0, latest_lane_ts_);
 
   // for e2e lantency statistics
   {
@@ -690,6 +697,7 @@ int LaneDetectionComponent::InternalProc(
     AERROR << "make lanes_msg failed";
     return cyber::FAIL;
   }
+  lanes_msg->mutable_header()->set_lane_timestamp(latest_lane_ts_);
   writer_->Write(lanes_msg);
 
   return cyber::SUCC;

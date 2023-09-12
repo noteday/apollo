@@ -41,6 +41,7 @@ cc_library(
     deps = [
         ":control_lib",
         "//modules/control/common:dependency_injector",
+        "//um_dev/profiling/timing:timing",
     ],
 )
 

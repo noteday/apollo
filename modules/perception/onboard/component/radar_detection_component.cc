@@ -18,6 +18,7 @@
 #include "cyber/time/clock.h"
 #include "modules/common/util/perf_util.h"
 #include "modules/perception/common/sensor_manager/sensor_manager.h"
+#include "um_dev/profiling/timing/timing.h"
 
 using Clock = apollo::cyber::Clock;
 
@@ -61,6 +62,10 @@ bool RadarDetectionComponent::Init() {
 }
 
 bool RadarDetectionComponent::Proc(const std::shared_ptr<ContiRadar>& message) {
+  // Yuting@2022.6.23: now sets ts when sensor goes into system
+  auto enter_ts = cyber::Time::Now();
+  latest_radar_ts_ = enter_ts.ToNanosecond();
+  um_dev::profiling::UM_Timing timing("RadarDetectionComponent::Proc");
   AINFO << "Enter radar preprocess, message timestamp: "
         << message->header().timestamp_sec() << " current timestamp "
         << Clock::NowInSeconds();
@@ -69,6 +74,10 @@ bool RadarDetectionComponent::Proc(const std::shared_ptr<ContiRadar>& message) {
   if (!InternalProc(message, out_message)) {
     return false;
   }
+
+  out_message->radar_timestamp_ = enter_ts.ToNanosecond();
+  timing.set_info(message->contiobs_size());
+  timing.set_finish(0, 0, latest_radar_ts_, 0, 0);
   writer_->Write(out_message);
   AINFO << "Send radar processing output message.";
   return true;

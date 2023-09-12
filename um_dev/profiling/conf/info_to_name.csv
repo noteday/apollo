@@ -1,0 +1,10 @@
+task,info1,info2,info3
+control,speed,num_trajectory_points,null
+detection,num_points,is_dense,null
+fusion,num_objects,null,null
+recognition,num_segmented_objects_,null,null
+trafficlight,num_trafficlights,null,null
+planning,num_obstacles,stories,null
+prediction,num_obstacles,null,null
+fusion_camera,num_objects,null,null
+radar,num_conti_objects,null,null
