@@ -1,0 +1,18 @@
+syntax = "proto2";
+
+package apollo.eucon;
+
+message Info {
+    optional int32 plseq = 1;
+    optional double duration = 2;
+    enum TaskType {
+        Localization_Component = 0;
+        Control_Component = 1;
+        Detection_Component = 2;
+        Recognition_Component = 3;
+        RadarDetection_Component = 4;
+        Fusion_Component = 5;
+        Planning_Component = 6;
+        Prediction_Component = 7;
+    }
+}
