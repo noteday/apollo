@@ -9,6 +9,8 @@ cc_library(
     deps = [
         ":component_base",
         "//cyber/scheduler",
+        "//um_dev/profiling/timing_channel:timing_message_cc_proto"
+        
     ],
 )
 
@@ -32,6 +34,7 @@ cc_library(
         "//cyber/timer",
         "//cyber/transport/message:history",
         "//cyber/transport/transmitter",
+        "//um_dev/profiling/timing_channel:timing_message_cc_proto"
     ],
 )
 

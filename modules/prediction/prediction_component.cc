@@ -34,6 +34,7 @@
 #include "modules/prediction/scenario/scenario_manager.h"
 #include "modules/prediction/util/data_extraction.h"
 #include "um_dev/profiling/timing/timing.h"
+#include "um_dev/profiling/timing_channel/timing_message.pb.h"
 
 namespace apollo {
 namespace prediction {
@@ -108,6 +109,8 @@ bool PredictionComponent::Init() {
 
   perception_obstacles_writer_ = node_->CreateWriter<PerceptionObstacles>(
       prediction_conf.topic_conf().perception_obstacles_topic_name());
+
+  time_message_writer_ = node_->CreateWriter<apollo::timingMessage::TimingMessage>("TimingMessage");
 
   return true;
 }
@@ -186,7 +189,9 @@ bool PredictionComponent::ContainerSubmoduleProcess(
       obstacles_container_ptr->GetSubmoduleOutput(kHistorySize,
                                                   frame_start_time);
   submodule_output.set_curr_scenario(scenario_manager_->scenario());
-  timing.set_finish(latest_camera_ts_, latest_lidar_ts_, latest_radar_ts_, latest_TL_ts_, latest_lane_ts_);
+  apollo::timingMessage::TimingMessage msg = timing.set_finish(latest_camera_ts_, latest_lidar_ts_, latest_radar_ts_, latest_TL_ts_, latest_lane_ts_);
+  msg.set_type(apollo::timingMessage::TimingMessage::Prediction_Component);
+  time_message_writer_->Write(msg);
   container_writer_->Write(submodule_output);
   adc_container_writer_->Write(*adc_trajectory_container_ptr);
   perception_obstacles_writer_->Write(*perception_obstacles); // Yuting@2022.6.16: Why output it again? See predicator_module.cc

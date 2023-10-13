@@ -21,6 +21,7 @@
 #include "modules/perception/onboard/common_flags/common_flags.h"
 #include "modules/perception/onboard/msg_serializer/msg_serializer.h"
 #include "um_dev/profiling/timing/timing.h"
+#include "um_dev/profiling/timing_channel/timing_message.pb.h"
 
 namespace apollo {
 namespace perception {
@@ -49,6 +50,8 @@ bool FusionComponent::Init() {
       comp_config.output_obstacles_channel_name());
   inner_writer_ = node_->CreateWriter<SensorFrameMessage>(
       comp_config.output_viz_fused_content_channel_name());
+
+  time_message_writer_ = node_->CreateWriter<apollo::timingMessage::TimingMessage>("TimingMessage");
   return true;
 }
 
@@ -81,7 +84,12 @@ bool FusionComponent::Proc(const std::shared_ptr<SensorFrameMessage>& message) {
     } else {
       // Send("/apollo/perception/obstacles", out_message);
       timing.set_info(num_objects_);
-      timing.set_finish(latest_camera_ts_, latest_lidar_ts_, latest_radar_ts_, 0, 0);
+      apollo::timingMessage::TimingMessage msg =
+          timing.set_finish(latest_camera_ts_, latest_lidar_ts_,
+                            latest_radar_ts_, 0, 0);
+      msg.set_type(apollo::timingMessage::TimingMessage::Fusion_Component);
+      time_message_writer_->Write(msg);
+
       writer_->Write(out_message);
       AINFO << "Send fusion processing output message.";
       // send msg for visualization

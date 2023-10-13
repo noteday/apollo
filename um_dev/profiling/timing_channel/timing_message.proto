@@ -1,0 +1,43 @@
+syntax = "proto2";
+
+package apollo.timingMessage;
+
+message TimingMessage {
+
+    optional int64 ts_start = 1;
+    optional int64 ts_end = 2;
+    optional TaskType type = 3;
+    optional int64 execution_time = 4;
+
+    optional int64 ts_cam = 5;
+    optional int64 ts_lidar = 6;
+    optional int64 ts_radar = 7;
+    optional int64 ts_TL = 8;
+    optional int64 ts_lane = 9;
+
+    optional int64 lat_cam = 10;
+    optional int64 lat_lidar = 11;
+    optional int64 lat_radar = 12;
+    optional int64 lat_TL = 13;
+    optional int64 lat_lane = 14;
+
+    optional bool is_finish = 15;
+
+    enum TaskType {
+        Localization_Component = 0;
+        Control_Component = 1;
+        Detection_Component = 2;
+        Recognition_Component = 3;
+        RadarDetection_Component = 4;
+        Fusion_Component = 5;
+        Planning_Component = 6;
+        Prediction_Component = 7;
+        TrafficLightDetection_Component = 8;
+        FusionCameraDetection_Component = 9;
+    }
+    
+    optional int32 plseq = 16;
+    optional double duration = 17;
+
+
+}

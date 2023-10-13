@@ -27,7 +27,7 @@
 #include "modules/planning/navi_planning.h"
 #include "modules/planning/on_lane_planning.h"
 #include "um_dev/profiling/timing/timing.h"
-
+#include "um_dev/profiling/timing_channel/timing_message.pb.h"
 namespace apollo {
 namespace planning {
 
@@ -120,6 +120,8 @@ bool PlanningComponent::Init() {
 
   planning_learning_data_writer_ = node_->CreateWriter<PlanningLearningData>(
       config_.topic_config().planning_learning_data_topic());
+
+  time_message_writer_ = node_->CreateWriter<apollo::timingMessage::TimingMessage>("TimingMessage");
 
   return true;
 }
@@ -255,8 +257,10 @@ bool PlanningComponent::Proc(
 
   timing.set_info(prediction_obstacles->prediction_obstacle_size(), stories_num,
                   0);
-  timing.set_finish(latest_camera_ts_, latest_lidar_ts_, latest_radar_ts_,
-                    latest_TL_ts_, latest_lane_ts_);
+  apollo::timingMessage::TimingMessage msg = timing.set_finish(latest_camera_ts_, latest_lidar_ts_, latest_radar_ts_, latest_TL_ts_, latest_lane_ts_);
+  msg.set_type(apollo::timingMessage::TimingMessage::Planning_Component);
+  time_message_writer_->Write(msg);
+
   planning_writer_->Write(adc_trajectory_pb);
 
   // record in history

@@ -19,6 +19,7 @@
 #include "modules/common/util/perf_util.h"
 #include "modules/perception/common/sensor_manager/sensor_manager.h"
 #include "um_dev/profiling/timing/timing.h"
+#include "um_dev/profiling/timing_channel/timing_message.pb.h"
 
 using Clock = apollo::cyber::Clock;
 
@@ -50,6 +51,7 @@ bool RadarDetectionComponent::Init() {
 
   writer_ = node_->CreateWriter<SensorFrameMessage>(
       comp_config.output_channel_name());
+  time_message_writer_ = node_->CreateWriter<apollo::timingMessage::TimingMessage>("TimingMessage");
 
   // Init algorithm plugin
   ACHECK(InitAlgorithmPlugin()) << "Failed to init algorithm plugin.";
@@ -77,7 +79,9 @@ bool RadarDetectionComponent::Proc(const std::shared_ptr<ContiRadar>& message) {
 
   out_message->radar_timestamp_ = enter_ts.ToNanosecond();
   timing.set_info(message->contiobs_size());
-  timing.set_finish(0, 0, latest_radar_ts_, 0, 0);
+  apollo::timingMessage::TimingMessage msg = timing.set_finish(0, 0, latest_radar_ts_, 0, 0);
+  msg.set_type(apollo::timingMessage::TimingMessage::RadarDetection_Component);
+  time_message_writer_->Write(msg);
   writer_->Write(out_message);
   AINFO << "Send radar processing output message.";
   return true;

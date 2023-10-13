@@ -8,6 +8,7 @@
 #include <string>
 
 #include "cyber/time/time.h"
+#include "um_dev/profiling/timing_channel/timing_message.pb.h"
 
 namespace um_dev {
 namespace profiling {
@@ -18,7 +19,7 @@ class UM_Timing {
   UM_Timing(UM_Timing&) = delete;
   UM_Timing(std::string taskname);
   ~UM_Timing();
-  void set_finish(const long long ts_cam, 
+  apollo::timingMessage::TimingMessage set_finish(const long long ts_cam, 
                           const long long ts_lidar, 
                           const long long ts_radar, 
                           const long long ts_TL,

@@ -11,5 +11,6 @@ cc_library(
         "//cyber/time:time",
         "//cyber/time:duration",
         "//um_dev/profiling:result_writer",
+        "//um_dev/profiling/timing_channel:timing_message_cc_proto",
     ],
 )

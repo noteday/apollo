@@ -7,6 +7,7 @@
 #include "um_dev/profiling/result_writer.h"
 
 #include "cyber/time/duration.h"
+#include "um_dev/profiling/timing_channel/timing_message.pb.h"
 
 namespace um_dev {
 namespace profiling {
@@ -38,13 +39,14 @@ UM_Timing::~UM_Timing() {
                                                   0);
 }
 
-void UM_Timing::set_finish(const long long ts_cam, 
+apollo::timingMessage::TimingMessage UM_Timing::set_finish(const long long ts_cam, 
                           const long long ts_lidar, 
                           const long long ts_radar, 
                           const long long ts_TL,
                           const long long ts_lane) {
+  apollo::timingMessage::TimingMessage msg;
   if (is_finish_) {
-    return;
+    return msg;
   }
   is_finish_ = true;
   auto ts_end =  apollo::cyber::Time::Now();
@@ -66,6 +68,22 @@ void UM_Timing::set_finish(const long long ts_cam,
                                                   info1,
                                                   info2,
                                                   info3);
+
+  msg.set_ts_start(ts_start_.ToNanosecond());
+  msg.set_ts_end(ts_end.ToNanosecond());
+  msg.set_execution_time(duration.ToNanosecond());
+  msg.set_ts_cam(ts_cam);
+  msg.set_ts_lidar(ts_lidar);
+  msg.set_ts_radar(ts_radar);
+  msg.set_ts_tl(ts_TL);
+  msg.set_ts_lane(ts_lane);
+  msg.set_lat_cam(ts_end.ToNanosecond() - ts_cam);
+  msg.set_lat_lidar(ts_end.ToNanosecond() - ts_lidar);
+  msg.set_lat_radar(ts_end.ToNanosecond() - ts_radar);
+  msg.set_lat_tl(ts_end.ToNanosecond() - ts_TL);
+  msg.set_lat_lane(ts_end.ToNanosecond() - ts_lane);
+  msg.set_is_finish(true);
+  return msg;
 }
 
 void UM_Timing::set_info(const int info1, const int info2, const int info3) {

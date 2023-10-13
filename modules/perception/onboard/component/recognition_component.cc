@@ -23,6 +23,7 @@
 #include "modules/perception/lidar/common/lidar_log.h"
 // #include "modules/perception/onboard/component/lidar_common_flags.h"
 #include "um_dev/profiling/timing/timing.h"
+#include "um_dev/profiling/timing_channel/timing_message.pb.h"
 
 using Clock = apollo::cyber::Clock;
 
@@ -39,6 +40,7 @@ bool RecognitionComponent::Init() {
   output_channel_name_ = comp_config.output_channel_name();
   main_sensor_name_ = comp_config.main_sensor_name();
   writer_ = node_->CreateWriter<SensorFrameMessage>(output_channel_name_);
+  time_message_writer_ = node_->CreateWriter<apollo::timingMessage::TimingMessage>("TimingMessage");
   if (!InitAlgorithmPlugin()) {
     AERROR << "Failed to init recongnition component algorithm plugin.";
     return false;
@@ -60,7 +62,9 @@ bool RecognitionComponent::Proc(
 
   if (InternalProc(message, out_message)) {
     writer_->Write(out_message);
-    timing.set_finish(0, latest_lidar_ts_, 0, 0, 0);
+    apollo::timingMessage::TimingMessage msg = timing.set_finish(0, latest_lidar_ts_, 0, 0, 0);
+    msg.set_type(apollo::timingMessage::TimingMessage::Recognition_Component);
+    time_message_writer_->Write(msg);
     AINFO << "Send lidar recognition output message.";
     return true;
   }

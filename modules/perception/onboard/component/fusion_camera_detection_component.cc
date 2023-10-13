@@ -31,6 +31,7 @@
 #include "modules/perception/onboard/common_flags/common_flags.h"
 #include "modules/perception/onboard/component/camera_perception_viz_message.h"
 #include "um_dev/profiling/timing/timing.h"
+#include "um_dev/profiling/timing_channel/timing_message.pb.h"
 
 namespace apollo {
 namespace perception {
@@ -197,6 +198,8 @@ bool FusionCameraDetectionComponent::Init() {
   camera_debug_writer_ =
       node_->CreateWriter<apollo::perception::camera::CameraDebug>(
           camera_debug_channel_name_);
+  time_message_writer_ = node_->CreateWriter<apollo::timingMessage::TimingMessage>("TimingMessage");
+
   if (InitSensorInfo() != cyber::SUCC) {
     AERROR << "InitSensorInfo() failed.";
     return false;
@@ -325,7 +328,9 @@ void FusionCameraDetectionComponent::OnReceiveImage(
 
   prefused_message->camera_timestamp_ = latest_camera_ts_;
   timing.set_info(prefused_message->frame_->objects.size());
-  timing.set_finish(latest_camera_ts_, 0, 0, 0, 0);
+  apollo::timingMessage::TimingMessage msg = timing.set_finish(latest_camera_ts_, 0, 0, 0, 0);
+  msg.set_type(apollo::timingMessage::TimingMessage::FusionCameraDetection_Component);
+  time_message_writer_->Write(msg);
   bool send_sensorframe_ret = sensorframe_writer_->Write(prefused_message);
   AINFO << "send out prefused msg, ts: " << msg_timestamp
         << "ret: " << send_sensorframe_ret;

@@ -24,6 +24,7 @@ cc_library(
         "//modules/prediction/submodules:submodule_output",
         "//modules/prediction/util:data_extraction",
         "//um_dev/profiling/timing:timing",
+        "//um_dev/profiling/timing_channel:timing_message_cc_proto",
     ],
 )
 

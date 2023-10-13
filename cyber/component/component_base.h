@@ -31,6 +31,7 @@
 #include "cyber/common/file.h"
 #include "cyber/node/node.h"
 #include "cyber/scheduler/scheduler.h"
+#include "um_dev/profiling/timing_channel/timing_message.pb.h"
 
 namespace apollo {
 namespace cyber {
@@ -120,6 +121,8 @@ class ComponentBase : public std::enable_shared_from_this<ComponentBase> {
   unsigned long long latest_radar_ts_ = 0;
   unsigned long long latest_TL_ts_ = 0;
   unsigned long long latest_lane_ts_ = 0;
+
+  std::shared_ptr<cyber::Writer<apollo::timingMessage::TimingMessage>> time_message_writer_  = nullptr;
 };
 
 }  // namespace cyber

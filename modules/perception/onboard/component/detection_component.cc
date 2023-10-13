@@ -23,7 +23,7 @@
 #include "modules/perception/lidar/common/lidar_log.h"
 #include "modules/perception/onboard/common_flags/common_flags.h"
 #include "um_dev/profiling/timing/timing.h"
-
+#include "um_dev/profiling/timing_channel/timing_message.pb.h"
 using ::apollo::cyber::Clock;
 
 namespace apollo {
@@ -48,6 +48,7 @@ bool DetectionComponent::Init() {
       static_cast<float>(comp_config.lidar_query_tf_offset());
   enable_hdmap_ = comp_config.enable_hdmap();
   writer_ = node_->CreateWriter<LidarFrameMessage>(output_channel_name_);
+  time_message_writer_ = node_->CreateWriter<apollo::timingMessage::TimingMessage>("TimingMessage");
 
   if (!InitAlgorithmPlugin()) {
     AERROR << "Failed to init detection component algorithm plugin.";
@@ -78,7 +79,9 @@ bool DetectionComponent::Proc(
     out_message->timestamp_ = enter_ts.ToSecond();
     out_message->lidar_timestamp_ = enter_ts.ToNanosecond();
     timing.set_info(message->point_size(), message->is_dense());
-    timing.set_finish(0, latest_lidar_ts_, 0, 0, 0);
+    apollo::timingMessage::TimingMessage msg = timing.set_finish(0, latest_lidar_ts_, 0, 0, 0);
+    msg.set_type(apollo::timingMessage::TimingMessage::Detection_Component);
+    time_message_writer_->Write(msg);
     writer_->Write(out_message);
     AINFO << "Send lidar detect output message.";
   }

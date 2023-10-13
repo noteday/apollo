@@ -38,6 +38,7 @@
 #include "modules/perception/common/sensor_manager/sensor_manager.h"
 #include "modules/perception/onboard/common_flags/common_flags.h"
 #include "um_dev/profiling/timing/timing.h"
+#include "um_dev/profiling/timing_channel/timing_message.pb.h"
 
 namespace apollo {
 namespace perception {
@@ -91,6 +92,7 @@ bool TrafficLightsPerceptionComponent::Init() {
   frame_.reset(new camera::CameraFrame);
   writer_ = node_->CreateWriter<apollo::perception::TrafficLightDetection>(
       "/apollo/perception/traffic_light");
+  time_message_writer_ = node_->CreateWriter<apollo::timingMessage::TimingMessage>("TimingMessage");
 
   if (InitConfig() != cyber::SUCC) {
     AERROR << "TrafficLightsPerceptionComponent InitConfig failed.";
@@ -421,7 +423,9 @@ void TrafficLightsPerceptionComponent::OnReceiveImage(
   // send msg
   out_msg->mutable_header()->set_camera_timestamp(enter_ts.ToNanosecond());
   timing.set_info(out_msg->traffic_light_size());
-  timing.set_finish(0, 0, 0, latest_TL_ts_, 0);
+  apollo::timingMessage::TimingMessage time_msg = timing.set_finish(0, 0, 0, latest_TL_ts_, 0);
+  time_msg.set_type(apollo::timingMessage::TimingMessage::TrafficLightDetection_Component);
+  time_message_writer_->Write(time_msg);
   out_msg->mutable_header()->set_tl_timestamp(latest_TL_ts_);
   writer_->Write(out_msg);
 

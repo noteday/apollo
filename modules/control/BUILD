@@ -42,6 +42,7 @@ cc_library(
         ":control_lib",
         "//modules/control/common:dependency_injector",
         "//um_dev/profiling/timing:timing",
+        "//um_dev/profiling/timing_channel:timing_message_cc_proto",
     ],
 )
 

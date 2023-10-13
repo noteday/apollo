@@ -24,6 +24,7 @@
 #include "modules/common/vehicle_state/vehicle_state_provider.h"
 #include "modules/control/common/control_gflags.h"
 #include "um_dev/profiling/timing/timing.h"
+#include "um_dev/profiling/timing_channel/timing_message.pb.h"
 
 namespace apollo {
 namespace control {
@@ -105,6 +106,7 @@ bool ControlComponent::Init() {
         node_->CreateWriter<LocalView>(FLAGS_control_local_view_topic);
     ACHECK(local_view_writer_ != nullptr);
   }
+  time_message_writer_ = node_->CreateWriter<apollo::timingMessage::TimingMessage>("TimingMessage");
 
   // set initial vehicle state by cmd
   // need to sleep, because advertised channel is not ready immediately
@@ -437,7 +439,10 @@ bool ControlComponent::Proc() {
   }
   // Yuting: record E2E latency here, @2022.6.22: all writes to one line
   timing.set_info(local_view_.chassis().speed_mps(), trajectory_msg->trajectory_point_size());
-  timing.set_finish(latest_camera_ts_, latest_lidar_ts_, latest_radar_ts_, latest_TL_ts_, latest_lane_ts_);
+  apollo::timingMessage::TimingMessage msg = timing.set_finish(latest_camera_ts_, latest_lidar_ts_, latest_radar_ts_, latest_TL_ts_, latest_lane_ts_);
+  msg.set_type(apollo::timingMessage::TimingMessage::Control_Component);
+  time_message_writer_->Write(msg);
+
   control_cmd_writer_->Write(control_command);
   
   return true;
