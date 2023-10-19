@@ -151,33 +151,41 @@ bool DataProvider::FillImageData(int rows, int cols, const uint8_t *data,
   AINFO << "Fill in GPU mode ...";
   if (encoding == "rgb8") {
     if (handler_ != nullptr) {
+      AINFO << "rgb8 encoding with handler.";
       cudaMemcpy(ori_rgb_->mutable_gpu_data(), data,
                  ori_rgb_->rows() * ori_rgb_->width_step(), cudaMemcpyDefault);
       success = handler_->Handle(*ori_rgb_, rgb_.get());
     } else {
+      AINFO << "rgb8 encoding without handler.";
+      AINFO << rgb_->rows();
+      AINFO << rgb_->width_step();
       cudaMemcpy(rgb_->mutable_gpu_data(), data,
                  rgb_->rows() * rgb_->width_step(), cudaMemcpyDefault);
       success = true;
     }
     rgb_ready_ = true;
   } else if (encoding == "bgr8") {
+    AINFO << "bgr8 encoding with handler.";
     if (handler_ != nullptr) {
       cudaMemcpy(ori_bgr_->mutable_gpu_data(), data,
                  ori_bgr_->rows() * ori_bgr_->width_step(), cudaMemcpyDefault);
       success = handler_->Handle(*ori_bgr_, bgr_.get());
     } else {
+      AINFO << "bgr8 encoding without handler.";
       cudaMemcpy(bgr_->mutable_gpu_data(), data,
                  bgr_->rows() * bgr_->width_step(), cudaMemcpyDefault);
       success = true;
     }
     bgr_ready_ = true;
   } else if (encoding == "gray" || encoding == "y") {
+    AINFO << "gray encoding with handler.";
     if (handler_ != nullptr) {
       cudaMemcpy(ori_gray_->mutable_gpu_data(), data,
                  ori_gray_->rows() * ori_gray_->width_step(),
                  cudaMemcpyDefault);
       success = handler_->Handle(*ori_gray_, gray_.get());
     } else {
+      AINFO << "gray encoding without handler.";
       cudaMemcpy(gray_->mutable_gpu_data(), data,
                  gray_->rows() * gray_->width_step(), cudaMemcpyDefault);
       success = true;

@@ -28,6 +28,49 @@ cc_library(
     ],
 )
 
+cc_library(
+    name = "prediction_component_lib_2",
+    srcs = ["prediction_component_2.cc"],
+    hdrs = ["prediction_component_2.h"],
+    copts = PREDICTION_COPTS,
+    deps = [
+        "//cyber/common:file",
+        "//modules/common/adapters:adapter_gflags",
+        "//modules/prediction/common:message_process",
+        "//modules/prediction/evaluator:evaluator_manager",
+        "//modules/prediction/predictor:predictor_manager",
+        "//modules/prediction/proto:offline_features_cc_proto",
+        "//modules/prediction/scenario:scenario_manager",
+        "//modules/prediction/submodules:evaluator_submodule_lib",
+        "//modules/prediction/submodules:predictor_submodule_lib",
+        "//modules/prediction/submodules:submodule_output",
+        "//modules/prediction/util:data_extraction",
+        "//um_dev/profiling/timing:timing",
+        "//um_dev/profiling/timing_channel:timing_message_cc_proto",
+    ],
+)
+
+cc_library(
+    name = "prediction_component_lib_3",
+    srcs = ["prediction_component_3.cc"],
+    hdrs = ["prediction_component_3.h"],
+    copts = PREDICTION_COPTS,
+    deps = [
+        "//cyber/common:file",
+        "//modules/common/adapters:adapter_gflags",
+        "//modules/prediction/common:message_process",
+        "//modules/prediction/evaluator:evaluator_manager",
+        "//modules/prediction/predictor:predictor_manager",
+        "//modules/prediction/proto:offline_features_cc_proto",
+        "//modules/prediction/scenario:scenario_manager",
+        "//modules/prediction/submodules:evaluator_submodule_lib",
+        "//modules/prediction/submodules:predictor_submodule_lib",
+        "//modules/prediction/submodules:submodule_output",
+        "//modules/prediction/util:data_extraction",
+        "//um_dev/profiling/timing:timing",
+        "//um_dev/profiling/timing_channel:timing_message_cc_proto",
+    ],
+)
 cc_test(
     name = "prediction_component_test",
     size = "small",
@@ -51,6 +94,19 @@ cc_binary(
     linkstatic = False,
     deps = [":prediction_component_lib"],
 )
+cc_binary(
+    name = "libprediction_component_2.so",
+    linkshared = True,
+    linkstatic = False,
+    deps = [":prediction_component_lib_2"],
+)
+
+cc_binary(
+    name = "libprediction_component_3.so",
+    linkshared = True,
+    linkstatic = False,
+    deps = [":prediction_component_lib_3"],
+)
 
 install(
     name = "install",
@@ -64,6 +120,7 @@ install(
         "//cyber:install",
     ],
 )
+
 
 filegroup(
     name = "runtime_data",

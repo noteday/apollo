@@ -55,6 +55,8 @@ bool ImageDecompressComponent::Proc(
   image->set_step(3 * image->width());
 
   auto size = mat_image.step * mat_image.rows;
+  AINFO << "Step: "<< mat_image.step;
+  AINFO << "Row: "<< mat_image.rows;
   image->set_data(&(mat_image.data[0]), size);
   writer_->Write(image);
   return true;
