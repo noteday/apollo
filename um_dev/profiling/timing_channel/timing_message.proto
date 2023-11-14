@@ -36,8 +36,9 @@ message TimingMessage {
         FusionCameraDetection_Component = 9;
     }
     
-    optional int32 plseq = 16;
+    optional string plseq = 16;  // number1 ，2 ，3 代表了并行的进程
     optional double duration = 17;
+    optional string taskName = 18;  //代表组件唯一的名字
 
 
 }

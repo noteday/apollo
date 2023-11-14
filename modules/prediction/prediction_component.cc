@@ -141,7 +141,7 @@ bool PredictionComponent::Proc(
 
 bool PredictionComponent::ContainerSubmoduleProcess(
     const std::shared_ptr<PerceptionObstacles>& perception_obstacles) {
-  um_dev::profiling::UM_Timing timing("PredictionComponent::ContainerSubmoduleProcess");
+  um_dev::profiling::UM_Timing timing(nodeName + "::ContainerSubmoduleProcess");
   constexpr static size_t kHistorySize = 10;
   const auto frame_start_time = Clock::Now();
   // Read localization info. and call OnLocalization to update
@@ -191,6 +191,8 @@ bool PredictionComponent::ContainerSubmoduleProcess(
   submodule_output.set_curr_scenario(scenario_manager_->scenario());
   apollo::timingMessage::TimingMessage msg = timing.set_finish(latest_camera_ts_, latest_lidar_ts_, latest_radar_ts_, latest_TL_ts_, latest_lane_ts_);
   msg.set_type(apollo::timingMessage::TimingMessage::Prediction_Component);
+  msg.set_taskname(nodeName);
+  msg.set_plseq(plseq);
   time_message_writer_->Write(msg);
   container_writer_->Write(submodule_output);
   adc_container_writer_->Write(*adc_trajectory_container_ptr);
@@ -200,7 +202,7 @@ bool PredictionComponent::ContainerSubmoduleProcess(
 
 bool PredictionComponent::PredictionEndToEndProc(
     const std::shared_ptr<PerceptionObstacles>& perception_obstacles) {
-  um_dev::profiling::UM_Timing timing("PredictionComponent::PredictionEndToEndProc");
+  um_dev::profiling::UM_Timing timing(nodeName + "::PredictionEndToEndProc");
   if (FLAGS_prediction_test_mode &&
       (Clock::NowInSeconds() - component_start_time_ >
        FLAGS_prediction_test_duration)) {

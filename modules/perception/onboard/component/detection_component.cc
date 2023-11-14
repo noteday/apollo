@@ -63,7 +63,7 @@ bool DetectionComponent::Proc(
   auto enter_ts = cyber::Time::Now();
   // Yuting@2022.6.24: now keep latest timestamps for sensors
   latest_lidar_ts_ = enter_ts.ToNanosecond();
-  um_dev::profiling::UM_Timing timing("DetectionComponent::Proc");
+  um_dev::profiling::UM_Timing timing(nodeName + "::Proc");
   timing.add_checkpoint("Beginning",
                         cyber::Time(message->measurement_time()).ToNanosecond(),
                         message->header().lidar_timestamp(), 0);
@@ -81,6 +81,8 @@ bool DetectionComponent::Proc(
     timing.set_info(message->point_size(), message->is_dense());
     apollo::timingMessage::TimingMessage msg = timing.set_finish(0, latest_lidar_ts_, 0, 0, 0);
     msg.set_type(apollo::timingMessage::TimingMessage::Detection_Component);
+    msg.set_taskname(nodeName);
+    msg.set_plseq(plseq);
     time_message_writer_->Write(msg);
     writer_->Write(out_message);
     AINFO << "Send lidar detect output message.";

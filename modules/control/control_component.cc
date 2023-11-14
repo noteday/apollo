@@ -41,6 +41,7 @@ ControlComponent::ControlComponent()
     : monitor_logger_buffer_(common::monitor::MonitorMessageItem::CONTROL) {}
 
 bool ControlComponent::Init() {
+  
   injector_ = std::make_shared<DependencyInjector>();
   init_time_ = Clock::Now();
 
@@ -301,7 +302,8 @@ Status ControlComponent::ProduceControlCommand(
 }
 
 bool ControlComponent::Proc() {
-  um_dev::profiling::UM_Timing timing("ControlComponent::Proc");
+  nodeName = node_->Name();
+  um_dev::profiling::UM_Timing timing(nodeName + "::Proc");
   const auto start_time = Clock::Now();
 
   chassis_reader_->Observe();
@@ -441,6 +443,8 @@ bool ControlComponent::Proc() {
   timing.set_info(local_view_.chassis().speed_mps(), trajectory_msg->trajectory_point_size());
   apollo::timingMessage::TimingMessage msg = timing.set_finish(latest_camera_ts_, latest_lidar_ts_, latest_radar_ts_, latest_TL_ts_, latest_lane_ts_);
   msg.set_type(apollo::timingMessage::TimingMessage::Control_Component);
+  msg.set_taskname(nodeName);
+  msg.set_plseq(plseq);
   time_message_writer_->Write(msg);
 
   control_cmd_writer_->Write(control_command);

@@ -274,7 +274,7 @@ void CameraObstacleDetectionComponent::OnReceiveImage(
   auto enter_ts = cyber::Time::Now();
   // Yuting@2022.6.24: now keep latest timestamps for sensors
   latest_camera_ts_ = enter_ts.ToNanosecond();
-  um_dev::profiling::UM_Timing timing("CameraObstacleDetectionComponent::OnReceiveImage");
+  um_dev::profiling::UM_Timing timing(nodeName + "::OnReceiveImage");
   std::lock_guard<std::mutex> lock(mutex_);
   const double msg_timestamp = message->measurement_time() + timestamp_offset_;
   AINFO << "Enter CameraObstacleDetectionComponent::Proc(), "

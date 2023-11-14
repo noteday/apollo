@@ -330,6 +330,8 @@ void FusionCameraDetectionComponent_2::OnReceiveImage(
   timing.set_info(prefused_message->frame_->objects.size());
   apollo::timingMessage::TimingMessage msg = timing.set_finish(latest_camera_ts_, 0, 0, 0, 0);
   msg.set_type(apollo::timingMessage::TimingMessage::FusionCameraDetection_Component);
+  msg.set_taskname(nodeName);
+  msg.set_plseq(plseq);
   time_message_writer_->Write(msg);
   bool send_sensorframe_ret = sensorframe_writer_->Write(prefused_message);
   AINFO << "send out prefused msg, ts: " << msg_timestamp

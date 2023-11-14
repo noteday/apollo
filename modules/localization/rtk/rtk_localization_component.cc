@@ -85,7 +85,7 @@ bool RTKLocalizationComponent::InitIO() {
 bool RTKLocalizationComponent::Proc(
     const std::shared_ptr<localization::Gps>& gps_msg) {
   gps_msg->mutable_header()->set_radar_timestamp(cyber::Time::Now().ToNanosecond());
-  um_dev::profiling::UM_Timing timing("RTKLocalizationComponent::Proc");
+  um_dev::profiling::UM_Timing timing(nodeName + "::Proc");
   localization_->GpsCallback(gps_msg);
 
   if (localization_->IsServiceStarted()) {

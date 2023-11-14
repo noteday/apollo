@@ -59,7 +59,7 @@ bool RadarDetectionComponent::Init() {
   radar2novatel_trans_.Init(tf_child_frame_id_);
   localization_subscriber_.Init(
       odometry_channel_name_,
-      odometry_channel_name_ + '_' + comp_config.radar_name());
+      odometry_channel_name_ + '_' + tf_child_frame_id_);
   return true;
 }
 
@@ -67,7 +67,7 @@ bool RadarDetectionComponent::Proc(const std::shared_ptr<ContiRadar>& message) {
   // Yuting@2022.6.23: now sets ts when sensor goes into system
   auto enter_ts = cyber::Time::Now();
   latest_radar_ts_ = enter_ts.ToNanosecond();
-  um_dev::profiling::UM_Timing timing("RadarDetectionComponent::Proc");
+  um_dev::profiling::UM_Timing timing(nodeName + "::Proc");
   AINFO << "Enter radar preprocess, message timestamp: "
         << message->header().timestamp_sec() << " current timestamp "
         << Clock::NowInSeconds();
@@ -81,6 +81,8 @@ bool RadarDetectionComponent::Proc(const std::shared_ptr<ContiRadar>& message) {
   timing.set_info(message->contiobs_size());
   apollo::timingMessage::TimingMessage msg = timing.set_finish(0, 0, latest_radar_ts_, 0, 0);
   msg.set_type(apollo::timingMessage::TimingMessage::RadarDetection_Component);
+  msg.set_taskname(nodeName);
+  msg.set_plseq(plseq);
   time_message_writer_->Write(msg);
   writer_->Write(out_message);
   AINFO << "Send radar processing output message.";

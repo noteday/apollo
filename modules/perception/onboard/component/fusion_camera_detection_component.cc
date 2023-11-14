@@ -277,7 +277,7 @@ void FusionCameraDetectionComponent::OnReceiveImage(
   auto enter_ts = cyber::Time::Now();
   // Yuting@2022.6.24: now keep latest timestamps for sensors
   latest_camera_ts_ = enter_ts.ToNanosecond();
-  um_dev::profiling::UM_Timing timing("FusionCameraDetectionComponent::OnReceiveImage");
+  um_dev::profiling::UM_Timing timing(nodeName + "::OnReceiveImage");
   std::lock_guard<std::mutex> lock(mutex_);
   const double msg_timestamp = message->measurement_time() + timestamp_offset_;
   AINFO << "Enter FusionCameraDetectionComponent::Proc(), "
@@ -330,6 +330,8 @@ void FusionCameraDetectionComponent::OnReceiveImage(
   timing.set_info(prefused_message->frame_->objects.size());
   apollo::timingMessage::TimingMessage msg = timing.set_finish(latest_camera_ts_, 0, 0, 0, 0);
   msg.set_type(apollo::timingMessage::TimingMessage::FusionCameraDetection_Component);
+  msg.set_taskname(nodeName);
+  msg.set_plseq(plseq);
   time_message_writer_->Write(msg);
   bool send_sensorframe_ret = sensorframe_writer_->Write(prefused_message);
   AINFO << "send out prefused msg, ts: " << msg_timestamp

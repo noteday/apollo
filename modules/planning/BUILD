@@ -11,10 +11,78 @@ cc_binary(
     deps = [":planning_component_lib"],
 )
 
+cc_binary(
+    name = "libplanning_component_3.so",
+    linkshared = True,
+    linkstatic = False,
+    deps = [":planning_component_lib_3"],
+)
+
+cc_binary(
+    name = "libplanning_component_2.so",
+    linkshared = True,
+    linkstatic = False,
+    deps = [":planning_component_lib_2"],
+)
+
 cc_library(
     name = "planning_component_lib",
     srcs = ["planning_component.cc"],
     hdrs = ["planning_component.h"],
+    copts = [
+        "-DMODULE_NAME=\\\"planning\\\"",
+    ],
+    deps = [
+        ":navi_planning",
+        ":on_lane_planning",
+        "//cyber",
+        "//modules/common/adapters:adapter_gflags",
+        "//modules/common/util:message_util",
+        "//modules/localization/proto:localization_cc_proto",
+        "//modules/map/relative_map/proto:navigation_cc_proto",
+        "//modules/perception/proto:traffic_light_detection_cc_proto",
+        "//modules/planning/common:history",
+        "//modules/planning/common:message_process",
+        "//modules/planning/proto:planning_cc_proto",
+        "//modules/prediction/proto:prediction_obstacle_cc_proto",
+        "//modules/storytelling/proto:story_cc_proto",
+        "//um_dev/profiling/timing:timing",
+        "//um_dev/profiling/timing_channel:timing_message_cc_proto",
+
+    ],
+)
+
+cc_library(
+    name = "planning_component_lib_3",
+    srcs = ["planning_component_3.cc"],
+    hdrs = ["planning_component_3.h"],
+    copts = [
+        "-DMODULE_NAME=\\\"planning\\\"",
+    ],
+    deps = [
+        ":navi_planning",
+        ":on_lane_planning",
+        "//cyber",
+        "//modules/common/adapters:adapter_gflags",
+        "//modules/common/util:message_util",
+        "//modules/localization/proto:localization_cc_proto",
+        "//modules/map/relative_map/proto:navigation_cc_proto",
+        "//modules/perception/proto:traffic_light_detection_cc_proto",
+        "//modules/planning/common:history",
+        "//modules/planning/common:message_process",
+        "//modules/planning/proto:planning_cc_proto",
+        "//modules/prediction/proto:prediction_obstacle_cc_proto",
+        "//modules/storytelling/proto:story_cc_proto",
+        "//um_dev/profiling/timing:timing",
+        "//um_dev/profiling/timing_channel:timing_message_cc_proto",
+
+    ],
+)
+
+cc_library(
+    name = "planning_component_lib_2",
+    srcs = ["planning_component_2.cc"],
+    hdrs = ["planning_component_2.h"],
     copts = [
         "-DMODULE_NAME=\\\"planning\\\"",
     ],

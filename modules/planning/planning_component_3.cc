@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *****************************************************************************/
-#include "modules/planning/planning_component.h"
+#include "modules/planning/planning_component_3.h"
 
 #include "cyber/common/file.h"
 #include "modules/common/adapters/adapter_gflags.h"
@@ -39,7 +39,7 @@ using apollo::routing::RoutingRequest;
 using apollo::routing::RoutingResponse;
 using apollo::storytelling::Stories;
 
-bool PlanningComponent::Init() {
+bool PlanningComponent_3::Init() {
   injector_ = std::make_shared<DependencyInjector>();
 
   if (FLAGS_use_navigation_mode) {
@@ -122,12 +122,11 @@ bool PlanningComponent::Init() {
       config_.topic_config().planning_learning_data_topic());
 
   time_message_writer_ = node_->CreateWriter<apollo::timingMessage::TimingMessage>("TimingMessage");
-    ADEBUG << "Nodename"+nodeName;
 
   return true;
 }
 
-bool PlanningComponent::Proc(
+bool PlanningComponent_3::Proc(
     const std::shared_ptr<prediction::PredictionObstacles>&
         prediction_obstacles,
     const std::shared_ptr<canbus::Chassis>& chassis,
@@ -151,7 +150,7 @@ bool PlanningComponent::Proc(
                                  latest_radar_ts_
                          ? prediction_obstacles->header().radar_timestamp()
                          : latest_radar_ts_;
-  um_dev::profiling::UM_Timing timing(nodeName + "::Proc");
+  um_dev::profiling::UM_Timing timing("PlanningComponent_3::Proc");
  
   ACHECK(prediction_obstacles != nullptr);
 
@@ -260,8 +259,6 @@ bool PlanningComponent::Proc(
                   0);
   apollo::timingMessage::TimingMessage msg = timing.set_finish(latest_camera_ts_, latest_lidar_ts_, latest_radar_ts_, latest_TL_ts_, latest_lane_ts_);
   msg.set_type(apollo::timingMessage::TimingMessage::Planning_Component);
-  msg.set_taskname(nodeName);
-  msg.set_plseq(plseq);
   time_message_writer_->Write(msg);
 
   planning_writer_->Write(adc_trajectory_pb);
@@ -273,7 +270,7 @@ bool PlanningComponent::Proc(
   return true;
 }
 
-void PlanningComponent::CheckRerouting() {
+void PlanningComponent_3::CheckRerouting() {
   auto* rerouting = injector_->planning_context()
                         ->mutable_planning_status()
                         ->mutable_rerouting();
@@ -285,7 +282,7 @@ void PlanningComponent::CheckRerouting() {
   rerouting_writer_->Write(rerouting->routing_request());
 }
 
-bool PlanningComponent::CheckInput() {
+bool PlanningComponent_3::CheckInput() {
   ADCTrajectory trajectory_pb;
   auto* not_ready = trajectory_pb.mutable_decision()
                         ->mutable_main_decision()

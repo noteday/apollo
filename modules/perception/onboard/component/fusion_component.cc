@@ -63,7 +63,7 @@ bool FusionComponent::Proc(const std::shared_ptr<SensorFrameMessage>& message) {
   latest_camera_ts_ = message->camera_timestamp_ > latest_camera_ts_ ? message->camera_timestamp_ : latest_camera_ts_;
   latest_lidar_ts_ = message->lidar_timestamp_ > latest_lidar_ts_ ? message->lidar_timestamp_ : latest_lidar_ts_;
   latest_radar_ts_ = message->radar_timestamp_ > latest_radar_ts_ ? message->radar_timestamp_ : latest_radar_ts_;
-  um_dev::profiling::UM_Timing timing("FusionComponent::Proc"); // timing the whole function
+  um_dev::profiling::UM_Timing timing(nodeName + "::Proc"); // timing the whole function
   std::shared_ptr<PerceptionObstacles> out_message(new (std::nothrow)
                                                        PerceptionObstacles);
   std::shared_ptr<SensorFrameMessage> viz_message(new (std::nothrow)
@@ -88,6 +88,8 @@ bool FusionComponent::Proc(const std::shared_ptr<SensorFrameMessage>& message) {
           timing.set_finish(latest_camera_ts_, latest_lidar_ts_,
                             latest_radar_ts_, 0, 0);
       msg.set_type(apollo::timingMessage::TimingMessage::Fusion_Component);
+      msg.set_taskname(nodeName);
+      msg.set_plseq(plseq);
       time_message_writer_->Write(msg);
 
       writer_->Write(out_message);

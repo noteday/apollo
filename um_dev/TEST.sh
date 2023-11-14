@@ -59,6 +59,8 @@ nohup mainboard -d modules/drivers/tools/image_decompress/dag/image_decompress.d
 nohup mainboard -d modules/perception/production/dag/dag_streaming_perception_camera_2.dag &
 # Prediction
 nohup mainboard -d modules/prediction/dag/prediction_2.dag &
+# Planning
+nohup mainboard -d modules/planning/dag/planning_2.dag &
 
 
 ###test3
@@ -66,3 +68,15 @@ nohup mainboard -d modules/prediction/dag/prediction_2.dag &
 nohup mainboard -d modules/perception/production/dag/dag_streaming_obstacle_detection.dag &
 # Prediction
 nohup mainboard -d modules/prediction/dag/prediction_3.dag &
+# Planning
+nohup mainboard -d modules/planning/dag/planning_3.dag &
+
+
+
+### test4 only radar+point cloud
+#FusionCameraComponent
+nohup mainboard -d modules/perception/production/dag/dag_streaming_perception_4.dag &
+# Prediction
+nohup mainboard -d modules/prediction/dag/prediction_4.dag &
+# Planning
+nohup mainboard -d modules/planning/dag/planning_4.dag &

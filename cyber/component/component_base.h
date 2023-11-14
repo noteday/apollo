@@ -75,9 +75,18 @@ class ComponentBase : public std::enable_shared_from_this<ComponentBase> {
       if (config.config_file_path()[0] != '/') {
         config_file_path_ = common::GetAbsolutePath(common::WorkRoot(),
                                                     config.config_file_path());
+        nodeName = config.name();
+                                                    
       } else {
         config_file_path_ = config.config_file_path();
+        nodeName = config.name();
       }
+      int index = static_cast<int>(nodeName.find_last_of('_'));
+      if (index != -1) {
+        plseq = nodeName.substr(index + 1);
+      } else {
+        plseq = "1";
+      }    
     }
 
     if (!config.flag_file_path().empty()) {
@@ -95,9 +104,17 @@ class ComponentBase : public std::enable_shared_from_this<ComponentBase> {
       if (config.config_file_path()[0] != '/') {
         config_file_path_ = common::GetAbsolutePath(common::WorkRoot(),
                                                     config.config_file_path());
+        nodeName = config.name();
       } else {
         config_file_path_ = config.config_file_path();
+        nodeName = config.name();
       }
+      int index = static_cast<int>(nodeName.find_last_of('_'));
+      if (index != -1) {
+        plseq = nodeName.substr(index + 1);
+      } else {
+        plseq = "1";
+      } 
     }
 
     if (!config.flag_file_path().empty()) {
@@ -113,6 +130,8 @@ class ComponentBase : public std::enable_shared_from_this<ComponentBase> {
   std::atomic<bool> is_shutdown_ = {false};
   std::shared_ptr<Node> node_ = nullptr;
   std::string config_file_path_ = "";
+  std::string nodeName = "";
+  std::string plseq = "0";
   std::vector<std::shared_ptr<ReaderBase>> readers_;
 
   // Yuting@2022.6.23: add latest information timestamp in nano-second

@@ -29,11 +29,36 @@ cc_library(
     alwayslink = True,
 )
 
+cc_library(
+    name = "v2x_fusion_component_lib_4",
+    srcs = ["v2x_fusion_component_4.cc"],
+    hdrs = ["v2x_fusion_component_4.h"],
+    copts = [
+        "-DMODULE_NAME=\\\"v2x_fusion\\\"",
+    ],
+    deps = [
+        "//cyber/component",
+        "//modules/common/adapters:adapter_gflags",
+        "//modules/v2x/fusion/apps/common:trans_tools",
+        "//modules/v2x/fusion/configs:ft_config_manager",
+        "//modules/v2x/fusion/configs:fusion_tracker_gflags",
+        "//modules/v2x/fusion/libs/fusion",
+    ],
+    alwayslink = True,
+)
+
 cc_binary(
     name = "libv2x_fusion_component.so",
     linkshared = True,
     linkstatic = False,
     deps = [":v2x_fusion_component_lib"],
+)
+
+cc_binary(
+    name = "libv2x_fusion_component_4.so",
+    linkshared = True,
+    linkstatic = False,
+    deps = [":v2x_fusion_component_lib_4"],
 )
 
 cc_test(
