@@ -34,6 +34,7 @@ message TimingMessage {
         Prediction_Component = 7;
         TrafficLightDetection_Component = 8;
         FusionCameraDetection_Component = 9;
+        CameraObstacleDetection_Component = 10;
     }
     
     optional string plseq = 16;  // number1 ，2 ，3 代表了并行的进程

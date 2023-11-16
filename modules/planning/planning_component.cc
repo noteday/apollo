@@ -257,7 +257,7 @@ bool PlanningComponent::Proc(
   }
 
   timing.set_info(prediction_obstacles->prediction_obstacle_size(), stories_num,
-                  0);
+                  int(adc_trajectory_pb.debug().planning_data().adc_position().pose().angular_velocity().y()));
   apollo::timingMessage::TimingMessage msg = timing.set_finish(latest_camera_ts_, latest_lidar_ts_, latest_radar_ts_, latest_TL_ts_, latest_lane_ts_);
   msg.set_type(apollo::timingMessage::TimingMessage::Planning_Component);
   msg.set_taskname(nodeName);

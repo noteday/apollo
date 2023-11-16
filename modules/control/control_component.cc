@@ -440,6 +440,7 @@ bool ControlComponent::Proc() {
         end_time);
   }
   // Yuting: record E2E latency here, @2022.6.22: all writes to one line
+  //Vehicle Speed in meters per second + 
   timing.set_info(local_view_.chassis().speed_mps(), trajectory_msg->trajectory_point_size());
   apollo::timingMessage::TimingMessage msg = timing.set_finish(latest_camera_ts_, latest_lidar_ts_, latest_radar_ts_, latest_TL_ts_, latest_lane_ts_);
   msg.set_type(apollo::timingMessage::TimingMessage::Control_Component);

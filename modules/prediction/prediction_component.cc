@@ -306,7 +306,10 @@ bool PredictionComponent::PredictionEndToEndProc(
   prediction_obstacles.mutable_header()->set_lane_timestamp(latest_lane_ts_);
  
   timing.set_info(perception_obstacles->perception_obstacle_size());
-  timing.set_finish(latest_camera_ts_, latest_lidar_ts_, latest_radar_ts_, 0, 0);
+  apollo::timingMessage::TimingMessage msg = timing.set_finish(latest_camera_ts_, latest_lidar_ts_, latest_radar_ts_, 0, 0);
+  msg.set_type(apollo::timingMessage::TimingMessage::Prediction_Component);
+  msg.set_taskname(nodeName);
+  msg.set_plseq(plseq);
   prediction_writer_->Write(prediction_obstacles);
   return true;
 }
